@@ -51,11 +51,13 @@
                 <div class="col-md-3">
                     <div class="card product-card">
                         <div class="card-img-wrapper">
+                            <a href="{% url 'detail' item.id %}">
                         <img
                                 src="{{ item.image }}"
                                 class="card-img-top"
                                 alt="{{ item.title }}"
                         />
+                        </a>
                         </div>
                         <div class="card-body">
                             <div class="card-title">{{ item.title }}</div>
