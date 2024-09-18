@@ -11,11 +11,11 @@
             integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65"
             crossorigin="anonymous"
     />
-    <script
-            src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"
-            integrity="sha384-kenU1KFdBIe4zVF0s0G1M5b4hcpxyD9F7jL+jjXkk+Q2h455rYXK/7HAuoJl+0I4"
-            crossorigin="anonymous"
-    ></script>
+    <script src="https://code.jquery.com/jquery-3.7.1.js"
+            integrity="sha256-eKhayi8LEQwp4NKxN+CfCh+3qOVUtJn3QNZ0TciWLP4=" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/2.9.2/umd/popper.min.js" integrity="sha512-2rNj2KJ+D8s1ceNasTIex6z4HWyOnEYLVC3FigGOmyQCZc2eBXKgOxQmo3oKLHyfcj53uz4QMsRCWNbLd32Q1g==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
     <link rel="stylesheet" href="{% static 'shop/style.css' %}"/>
     <title>Shop</title>
 </head>
@@ -52,18 +52,18 @@
                     <div class="card product-card">
                         <div class="card-img-wrapper">
                             <a href="{% url 'detail' item.id %}">
-                        <img
-                                src="{{ item.image }}"
-                                class="card-img-top"
-                                alt="{{ item.title }}"
-                        />
-                        </a>
+                                <img
+                                        src="{{ item.image }}"
+                                        class="card-img-top"
+                                        alt="{{ item.title }}"
+                                />
+                            </a>
                         </div>
                         <div class="card-body">
-                            <div class="card-title">{{ item.title }}</div>
-                            <div class="card-text">$ {{ item.price }}</div>
+                            <div id="nm{{ item.id }}" class="card-title">{{ item.title }}</div>
+                            <div id="pr{{ item.id }}" class="card-text">$ {{ item.price }}</div>
                             <a href="{% url 'detail' item.id %}" class="btn btn-primary">View</a>
-                            <a class="btn btn-success">Add to cart</a>
+                            <button id="{{ item.id }}" class="btn atc btn-success">Add to cart</button>
                         </div>
                     </div>
                 </div>
@@ -109,4 +109,97 @@
     </div>
 </div>
 </body>
+<script type="text/javascript">
+    (function($, bootstrap) {
+        'use strict';
+
+        console.log("Hello from the shop");
+
+        // Initialize or load cart from localStorage
+        const CART_KEY = 'cart';
+        let cart = loadCart();
+
+        function loadCart() {
+            const storedCart = localStorage.getItem(CART_KEY);
+            if (storedCart) {
+                console.log(`Cart loaded: ${storedCart}`);
+                return JSON.parse(storedCart);
+            } else {
+                console.log("Cart created");
+                return {};
+            }
+        }
+
+        function saveCart() {
+            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        }
+
+        function updateCartDisplay() {
+            const cartButton = document.getElementById('cart');
+            const cartContent = generateCartContent();
+            cartButton.setAttribute('data-bs-content', cartContent);
+            // Update the cart badge or display if needed
+            // cartButton.innerHTML = `Cart (${Object.keys(cart).length})`;
+        }
+
+        function generateCartContent() {
+            if (Object.keys(cart).length === 0) {
+                return 'Cart is empty';
+            }
+
+            let content = '<h5>Your Cart</h5>';
+            for (const [itemId, quantity] of Object.entries(cart)) {
+                const itemName = document.getElementById(`nm${itemId}`)?.innerText || 'Unknown Item';
+                content += `${itemName} - Qty: ${quantity}<br>`;
+            }
+            return content;
+        }
+
+        function addToCart(itemId) {
+            if (cart[itemId]) {
+                cart[itemId] += 1;
+            } else {
+                cart[itemId] = 1;
+            }
+            console.log(`Cart updated: ${JSON.stringify(cart)}`);
+            saveCart();
+            updateCartDisplay();
+        }
+
+        function initializePopovers() {
+            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
+            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
+                html: true,
+                sanitize: false, // If you need to allow HTML
+            }));
+        }
+
+        function bindEventListeners() {
+            // Handle Add to Cart buttons using event delegation
+            document.querySelector('.container').addEventListener('click', function(event) {
+                if (event.target && event.target.matches('.btn.atc')) {
+                    const itemId = event.target.id;
+                    console.log(`Add to cart button clicked for item ID: ${itemId}`);
+                    addToCart(itemId);
+                }
+            });
+
+            // Update popover content when it's shown
+            const cartButton = document.getElementById('cart');
+            cartButton.addEventListener('shown.bs.popover', updateCartDisplay);
+        }
+
+        // Initialize the script
+        function init() {
+            updateCartDisplay();
+            initializePopovers();
+            bindEventListeners();
+        }
+
+        // Execute initialization on DOM ready
+        $(document).ready(init);
+
+    })(jQuery, bootstrap);
+</script>
+
 </html>
