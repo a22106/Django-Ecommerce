@@ -37,7 +37,3 @@ body {
     object-fit: contain;
     object-position: center;
 }
-
-.card-body {
-    flex-shrink: 0;
-}
