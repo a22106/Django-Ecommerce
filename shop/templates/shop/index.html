@@ -1,4 +1,5 @@
-{# shop/templates/shop/index.html #} {% load static %}
+{# shop/templates/shop/index.html #} 
+{% load static %}
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -110,96 +111,53 @@
 </div>
 </body>
 <script type="text/javascript">
-    (function($, bootstrap) {
-        'use strict';
+    console.log("hello")
 
-        console.log("Hello from the shop");
+    if(localStorage.getItem("cart") == null){
+        var cart = {};
+    }else{
+        cart = JSON.parse(localStorage.getItem("cart"));
+    }
 
-        // Initialize or load cart from localStorage
-        const CART_KEY = 'cart';
-        let cart = loadCart();
+    $(document).on('click', '.atc', function(){
+        console.log("The add to cart button was clicked");
+        var item_id = this.id;
+        console.log(`The item id is ${item_id}`);
 
-        function loadCart() {
-            const storedCart = localStorage.getItem(CART_KEY);
-            if (storedCart) {
-                console.log(`Cart loaded: ${storedCart}`);
-                return JSON.parse(storedCart);
-            } else {
-                console.log("Cart created");
-                return {};
-            }
+        if(cart[item_id] != undefined){
+            quantity = cart[item_id][0] + 1;
+            cart[item_id][0] = quantity;
+            cart[item_id][2] = cart[item_id][2] + parseFloat(document.getElementById(`price${item_id}`).innerHTML);
+        }else{
+            quantity = 1;
+            price = parseFloat(document.getElementById(`price${item_id}`).innerHTML);
+            name = document.getElementById(`nm${item_id}`).innerHTML;
+            cart[item_id] = [quantity, name, price];
         }
 
-        function saveCart() {
-            localStorage.setItem(CART_KEY, JSON.stringify(cart));
+        console.log(cart);
+        localStorage.setItem("cart", JSON.stringify(cart));
+        document.getElementById("cart").innerHTML = "Cart(" + Object.keys(cart).length + ")";
+
+    });
+
+    DisplayCart(cart);
+    function DisplayCart(cart){
+        var cartString = "";
+        cartString += "<h5>This is the cart</h5>";
+        var cartIndex = 1;
+        for(var x in cart){
+            cartString += cartIndex;
+            cartString += document.getElementById("nm" + x).innerHTML + "Qty:" + cart[x][0] + "</br>";
+            cartIndex++;
         }
-
-        function updateCartDisplay() {
-            const cartButton = document.getElementById('cart');
-            const cartContent = generateCartContent();
-            cartButton.setAttribute('data-bs-content', cartContent);
-            // Update the cart badge or display if needed
-            // cartButton.innerHTML = `Cart (${Object.keys(cart).length})`;
-        }
-
-        function generateCartContent() {
-            if (Object.keys(cart).length === 0) {
-                return 'Cart is empty';
-            }
-
-            let content = '<h5>Your Cart</h5>';
-            for (const [itemId, quantity] of Object.entries(cart)) {
-                const itemName = document.getElementById(`nm${itemId}`)?.innerText || 'Unknown Item';
-                content += `${itemName} - Qty: ${quantity}<br>`;
-            }
-            return content;
-        }
-
-        function addToCart(itemId) {
-            if (cart[itemId]) {
-                cart[itemId] += 1;
-            } else {
-                cart[itemId] = 1;
-            }
-            console.log(`Cart updated: ${JSON.stringify(cart)}`);
-            saveCart();
-            updateCartDisplay();
-        }
-
-        function initializePopovers() {
-            const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]');
-            const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
-                html: true,
-                sanitize: false, // If you need to allow HTML
-            }));
-        }
-
-        function bindEventListeners() {
-            // Handle Add to Cart buttons using event delegation
-            document.querySelector('.container').addEventListener('click', function(event) {
-                if (event.target && event.target.matches('.btn.atc')) {
-                    const itemId = event.target.id;
-                    console.log(`Add to cart button clicked for item ID: ${itemId}`);
-                    addToCart(itemId);
-                }
-            });
-
-            // Update popover content when it's shown
-            const cartButton = document.getElementById('cart');
-            cartButton.addEventListener('shown.bs.popover', updateCartDisplay);
-        }
-
-        // Initialize the script
-        function init() {
-            updateCartDisplay();
-            initializePopovers();
-            bindEventListeners();
-        }
-
-        // Execute initialization on DOM ready
-        $(document).ready(init);
-
-    })(jQuery, bootstrap);
+        cartString += "<a href='/checkout'><button class='btn btn-warning' id='checkout'>Checkout</button></a>";
+        document.getElementById("cart").setAttribute('data-bs-content', cartString);
+        const popoverTriggerList = document.querySelectorAll('[data-bs-toggle="popover"]')
+        const popoverList = [...popoverTriggerList].map(popoverTriggerEl => new bootstrap.Popover(popoverTriggerEl, {
+            html: true
+        }));
+            
+    }
 </script>
-
 </html>
